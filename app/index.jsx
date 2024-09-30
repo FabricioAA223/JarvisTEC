@@ -42,7 +42,9 @@ export default function App() {
   }, [isListening]);
 
   const startRecording = async () => {
+    console.log("Iniciando grabacion")
     if (isRecording.current) {
+      console.log("Ya hay una grabacion en curso")
       // console.log('Ya hay una grabación en curso.');
       return;
     }
@@ -58,7 +60,8 @@ export default function App() {
       // Detener grabación después de un tiempo
       setTimeout(() => {
         stopRecording();
-      }, 2500);
+      }, isListening.current? 2500: 10000);
+
     } catch (err) {
       console.error('Failed to start recording', err);
     }
@@ -101,7 +104,7 @@ export default function App() {
     });
 
     try {
-      const response = await fetch('http://192.168.192.11:8000/convert-and-transcribe/', {
+      const response = await fetch('http://192.168.1.125:8000/convert-and-transcribe/', {
         method: 'POST',
         body: formData,
         headers: {
@@ -121,9 +124,16 @@ export default function App() {
       // Verificamos si hay transcripción en la respuesta del servidor
       if (result && result.transcription) {
         setTranscription(result.transcription);
-        // Disparar acción si la transcripción contiene "jarvis"
-        if (result.transcription.toLowerCase().includes('jarvis')) {
-          triggerJarvisAction();
+        if(isListening.current){
+          // Disparar acción si la transcripción contiene "jarvis"
+          if (result.transcription.toLowerCase().includes('jarvis')) {
+            triggerJarvisAction();
+          }
+        } else {
+          console.log("No está escuchando, buscando categoría")
+          const category = identificarCategoria(result.transcription);
+          console.log("Categoria: ", category)
+          speak(category);
         }
       } else {
         setTranscription('Error: No transcription found.');
@@ -141,11 +151,11 @@ export default function App() {
 
   const triggerJarvisAction = () => {
     console.log('Hey Jarvis detected!');
-    alert('¡Has dicho "Hey Jarvis"!');
+    // alert('¡Has dicho "Hey Jarvis"!');
     isListening.current = false;
     // Detener el ciclo de grabación
     stopRecording();
-    speak("¿En qué puedo ayudarte?")
+    speak("¿En qué puedo ayudarte?");
   };
 
   const speak = (text) => {
@@ -153,31 +163,66 @@ export default function App() {
 
     Speech.speak(text || 'Hola, ¿cómo puedo ayudarte?', {
       language: 'es-ES',
-      onDone: () => setIsSpeaking(false),
+      onDone: () => {
+        if(text == "¿En qué puedo ayudarte?"){
+          startRecording()
+        }
+        setIsSpeaking(false)
+      },
       onError: () => setIsSpeaking(false),
     });
   };
 
-  const identificarCategoria = (transcripcion) => {
+  const identificarCategoria = (trans) => {
+    console.log("Categorizando el mensaje: ", trans)
     for (let categoria in CATEGORIAS) {
       for (let keyword of CATEGORIAS[categoria]) {
-        if (transcripcion.toLowerCase().includes(keyword)) {
-          return categoria;
+        if (trans.toLowerCase().includes(keyword)) {
+          return "Categoría reconocida ", categoria;
         }
       }
     }
-    return "no reconocido";
+    return "Lo siento, no estoy entrenado para eso";
   };
 
   return (
-    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'black' }}>
+    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'black', width:'100%' }}>
+      <Image 
+        source={isSpeaking?require('../assets/Speaking.gif'):require('../assets/IA_BG2.jpg')} 
+        style={{ width: '100%', height:'auto', aspectRatio:'2/3' }} 
+        resizeMode="contain"
+      />
+      <View style={{ justifyContent: 'center', alignItems: 'center', width: '100%', height: 150 }}>
+        {((isListening.current && !isProcessing) || (isRecording.current))  && (
+          <Image
+            source={require('../assets/images/sound_waves.gif')} 
+            style={{ width: '100%' }} 
+            resizeMode="contain"
+          />
+        )}
+      </View>
+    </View>
+  );
+}
+{/*<View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'black' }}>
       {!isListening.current &&
-        <Button
-          title={recordingRef.current ? 'Stop Recording' : 'Start Recording'}
-          onPress={recordingRef.current ? stopRecording : startRecording}
-        />
+        <>
+        { isRecording.current &&
+          <Button
+            title={'Stop Recording'}
+            onPress={stopRecording} 
+          />
+        }
+        {
+          !isRecording.current &&
+          <Button
+            title={'Start Recording'}
+            onPress={startRecording} 
+          />
+        }   
+        </>
       }
-      {/* {audioUri && (
+      {audioUri && (
         <Button
           title="Play the saved audio"
           onPress={() => {
@@ -189,10 +234,10 @@ export default function App() {
             }
           }}
         />
-      )} */}
+      )}
       <Button title="Speak" onPress={() => speak(transcription)} />
 
-      {/* {isProcessing ? (
+      {isProcessing ? (
         <View style={{ marginTop: 20, alignItems: 'center' }}>
           <ActivityIndicator size="large" color="#0000ff" />
           <Text style={{ color: 'white' }}>Processing transcription...</Text>
@@ -201,10 +246,10 @@ export default function App() {
         <Text style={{ marginTop: 20, color: 'white' }}>{`Transcription: ${transcription}`}</Text>
       ) : (
         <Text style={{ marginTop: 20, color: 'white' }}>Waiting for transcription...</Text>
-      )} */}
+      )}
 
       <View style={{ justifyContent: 'center', alignItems: 'center', width: '100%', height: 150 }}>
-        {(!recordingRef.current || isSpeaking) && (
+        {((isListening.current && !isProcessing) || isSpeaking)  && (
           <Image
             source={require('../assets/images/sound_waves.gif')} 
             style={{ width: '100%' }} 
@@ -212,6 +257,4 @@ export default function App() {
           />
         )}
       </View>
-    </View>
-  );
-}
+    </View> */}
