@@ -3,6 +3,14 @@ import { View, Text, Button, ActivityIndicator, Image } from 'react-native';
 import { Audio } from 'expo-av';
 import * as Speech from 'expo-speech';
 
+import { NavigationContainer } from '@react-navigation/native';
+import { createStackNavigator } from '@react-navigation/stack';
+import FacialLogin from '../components/FacialLogin';
+import HomePage from "../components/HomePage"
+
+const Stack = createStackNavigator();
+
+
 const CATEGORIAS = {
   predecirBitcoin: ['predecir el precio bitcoin', 'precio bitcoin', 'predecir bitcoin', 'bitcoin'],
   PredecirPrecioAuto: ['precedir el precio de un automovil', 'precio de un automóvil', 'predecir precio automóvil', 'precio automóvil', 'automóvil', 'precio auto', 'precio de un auto', 'auto'],
@@ -186,22 +194,29 @@ export default function App() {
   };
 
   return (
-    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'black', width:'100%' }}>
-      <Image 
-        source={isSpeaking?require('../assets/Speaking.gif'):require('../assets/IA_BG2.jpg')} 
-        style={{ width: '100%', height:'auto', aspectRatio:'2/3' }} 
-        resizeMode="contain"
-      />
-      <View style={{ justifyContent: 'center', alignItems: 'center', width: '100%', height: 150 }}>
-        {((isListening.current && !isProcessing) || (isRecording.current))  && (
-          <Image
-            source={require('../assets/images/sound_waves.gif')} 
-            style={{ width: '100%' }} 
-            resizeMode="contain"
-          />
-        )}
-      </View>
-    </View>
+    <NavigationContainer independent={true}>
+      <Stack.Navigator initialRouteName="Registro Facial">
+        <Stack.Screen name="Registro Facial" options={{ headerShown: false }}  component={FacialLogin} />
+        <Stack.Screen name="HomePage" options={{ headerShown: false }}  component={HomePage} />
+      </Stack.Navigator>
+    </NavigationContainer>
+
+    // <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'black', width:'100%' }}>
+    //   <Image 
+    //     source={isSpeaking?require('../assets/Speaking.gif'):require('../assets/IA_BG2.jpg')} 
+    //     style={{ width: '100%', height:'auto', aspectRatio:'2/3' }} 
+    //     resizeMode="contain"
+    //   />
+    //   <View style={{ justifyContent: 'center', alignItems: 'center', width: '100%', height: 150 }}>
+    //     {((isListening.current && !isProcessing) || (isRecording.current))  && (
+    //       <Image
+    //         source={require('../assets/images/sound_waves.gif')} 
+    //         style={{ width: '100%' }} 
+    //         resizeMode="contain"
+    //       />
+    //     )}
+    //   </View>
+    // </View>
   );
 }
 {/*<View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'black' }}>
