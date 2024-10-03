@@ -1,4 +1,4 @@
-import React, { useState, useRef} from "react";
+import React, { useState, useRef, useEffect} from "react";
 import {
   View,
   Text,
@@ -11,6 +11,7 @@ import {
 import { CameraView, CameraType, useCameraPermissions } from "expo-camera";
 import * as FileSystem from "expo-file-system";
 import { StackNavigationProp } from '@react-navigation/stack';
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 type RootStackParamList = {
   'Registro Facial': undefined; 
@@ -26,6 +27,25 @@ const FacialLogin: React.FC<FacialLoginProps> = ({ navigation }) => {
   const [permission, requestPermission] = useCameraPermissions(); //Ask for cam permission
   const cameraRef = useRef<CameraView>(null); // Cam reference
   const [loading, setLoading] = useState<boolean>(false); 
+  const [isLogged, setIsLogged] = useState<boolean>(false);
+  const [name, setName] = useState<string>("");
+
+  useEffect(() => {
+    const checkLoginStatus = async () => {
+      try {
+        const loggedIn = await AsyncStorage.getItem("isLogged");
+        const storedName = await AsyncStorage.getItem("name");
+        if (loggedIn === "true" && storedName) {
+          setIsLogged(true);
+          setName(storedName);
+          navigation.navigate("HomePage", { name: storedName });
+        }
+      } catch (error) {
+        console.error("Error checking login status", error);
+      }
+    };
+    checkLoginStatus();
+  }, []);
 
   if (!permission) {return <View />; }
 
@@ -61,6 +81,10 @@ const FacialLogin: React.FC<FacialLoginProps> = ({ navigation }) => {
 
   const handleLogin = async (imageUri: string) => {
     setLoading(true);
+    if(isLogged==true){
+      navigation.navigate("HomePage", { name: name });
+      return;
+    }
     try {
       const fileInfo = await FileSystem.getInfoAsync(imageUri); // FileSystem to conver URI --> FILE
       if (!fileInfo.exists) { throw new Error("El archivo no existe en la ruta especificada.");}
@@ -74,7 +98,7 @@ const FacialLogin: React.FC<FacialLoginProps> = ({ navigation }) => {
       };
       formData.append("image", file as any);
 
-      const response = await fetch("http://192.168.1.188:5000/login", {
+      const response = await fetch("https://face-recognition-aws-api.vercel.app/login", {
         method: "POST",
         body: formData,
         headers: {
@@ -89,7 +113,11 @@ const FacialLogin: React.FC<FacialLoginProps> = ({ navigation }) => {
 
       const result = await response.json();
       if (result.found) {
-        // Navigate to HomePage and pass the name as parameter
+        // Store login status and navigate to HomePage
+        await AsyncStorage.setItem("isLogged", "true");
+        await AsyncStorage.setItem("name", result.name);
+        setIsLogged(true);
+        setName(result.name);
         navigation.navigate("HomePage", { name: result.name });
       } else {
         Alert.alert("Error", result.message || "Persona no registrada.");
