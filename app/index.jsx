@@ -3,6 +3,13 @@ import { View, Text, Button, ActivityIndicator, Image } from 'react-native';
 import { Audio } from 'expo-av';
 import * as Speech from 'expo-speech';
 
+import { NavigationContainer } from '@react-navigation/native';
+import { createStackNavigator } from '@react-navigation/stack';
+import FacialLogin from '../components/FacialLogin';
+import HomePage from "../components/HomePage"
+
+const Stack = createStackNavigator();
+
 const stringNumbers = [
   //Tradicional
   {string:'cero', number:0},
@@ -578,6 +585,14 @@ export default function App() {
   };
 
   return (
+
+//     <NavigationContainer independent={true}>
+//       <Stack.Navigator initialRouteName="Registro Facial">
+//         <Stack.Screen name="Registro Facial" options={{ headerShown: false }}  component={FacialLogin} />
+//         <Stack.Screen name="HomePage" options={{ headerShown: false }}  component={HomePage} />
+//       </Stack.Navigator>
+//     </NavigationContainer>
+
     <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'black', width:'100%' }}>
       <Image 
         source={isSpeaking?require('../assets/Speaking.gif'):require('../assets/IA_BG2.jpg')} 
