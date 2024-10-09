@@ -1,12 +1,12 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, Button, ActivityIndicator, Image } from 'react-native';
+import { View, Text, Button, ActivityIndicator, Image, Alert, StyleSheet, Modal, TouchableOpacity } from 'react-native';
 import { Audio } from 'expo-av';
 import * as Speech from 'expo-speech';
-
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import FacialLogin from '../components/FacialLogin';
-import HomePage from "../components/HomePage"
+import HomePage from "../components/HomePage";
+import CarForm, { modeloCoche } from "../components/CarForm";
 
 const Stack = createStackNavigator();
 
@@ -192,63 +192,73 @@ const CATEGORIAS = [
   {
     keywords: ['precedir el precio de un automovil', 'precio de un automóvil', 'predecir precio automóvil', 'precio automóvil', 'automóvil', 'precio auto', 'precio de un auto', 'auto'], 
     nombre:"Precio auto", 
-    preguntas: modeloAcciones,
-    endPoint: 'predict_price_vehicle'
+    preguntas: modeloCoche,
+    endPoint: 'predict_price_vehicle ',
+    useForm: true
   }, 
   {
     keywords: ['predecir grasa corporal'], 
     nombre:"grasa corporal", 
     preguntas: modeloMasaCorporal,
-    endPoint: 'predict_bodyfat '
+    endPoint: 'predict_bodyfat ',
+    useForm: false
   },
   {
     keywords: ['predecir ataque cardiaco', 'predecir ataque corazón', 'paro cardiaco', 'ataque cardiaco', 'ataque corazón'], 
     nombre:"Ataque cardiaco", 
     preguntas: modeloAtaqueCardiaco,
-    endPoint: 'predict_stroke '
+    endPoint: 'predict_stroke ',
+    useForm: false
   },
   {
     keywords: ['precedir el precio de una casa', 'precio de una casa', 'predecir precio casa', 'precio casa', 'casa'], 
     nombre:"Precio casa", 
     preguntas: modeloPrecioCasa,
-    endPoint: 'predict_house_price '
+    endPoint: 'predict_house_price ',
+    useForm: false
   },
   {
     keywords: ['predecir la cirrosis'], 
     nombre:"Cirrosis", 
     preguntas: modeloCirrosis,
-    endPoint: 'predict_cirrosis'
+    endPoint: 'predict_cirrosis',
+    useForm: false
   },
   {
     keywords: ['predecir cambio de proveedor'], 
     nombre:"Proveedor telefonico", 
     preguntas: modeloCambioProveedorTelefonia,
-    endPoint: 'predict_telephony'
+    endPoint: 'predict_telephony',
+    useForm: false
   },
   {
     keywords: ['predecir la calidad del vino', 'predecir la calidad de un vino', 'calidad del vino', 'predecir vino', 'vino'], 
     nombre:"Calidad del vino", 
     preguntas: modeloClasificacionVino,
-    endPoint: 'classify_vino'
+    endPoint: 'classify_vino',
+    useForm: false
   },
   {
     keywords: ['predecir la hepatitis'], 
     nombre:"Hepatitis", 
     preguntas: modeloPrediccionHepatitis,
-    endPoint: 'predict_hepatitis'
+    endPoint: 'predict_hepatitis',
+    useForm: false
   },
 
   {
     keywords: ['predecir el precio del bitcoin', 'precio bitcoin', 'predecir bitcoin', 'bitcoin'], 
     nombre:"Predecir bitcoin", 
     preguntas: modeloBitcoin,
-    endPoint: '/predict_bitcoin'
+    endPoint: '/predict_bitcoin',
+    useForm: false
   },
   {
     keywords: ['predecir el precio de las acciones', 'precio acciones','acciones'], 
     nombre:"Predecir acciones", 
     preguntas: modeloAcciones,
-    endPoint: '/mercadoSP'
+    endPoint: '/mercadoSP',
+    useForm: false
   },
 ];
 
@@ -262,6 +272,14 @@ export default function App() {
   const isRecording = useRef(false); // Usar useRef para controlar el estado de grabación
   const categoryRef = useRef(null) //inicia en null
   const firstCall = useRef(true)
+  const [showCarForm, setShowCarForm] = useState(true);
+
+  const handleFormSubmit = (data) => {
+    console.log('Datos del formulario:', data);
+    callIAModel(data, 'predict_price_vehicle')
+    setShowCarForm(false);
+    startListening();
+  };
 
   const startListening = async () => {
     isListening.current = true;
@@ -507,6 +525,11 @@ export default function App() {
       startListening();
       return;
     }
+    if (categoria.useForm) {
+      setL
+      setShowCarForm(true);
+      return;
+    }
     const questionsList = categoria.preguntas
     const responses = [];
     for (const pregunta of questionsList) {
@@ -593,14 +616,13 @@ export default function App() {
 //       </Stack.Navigator>
 //     </NavigationContainer>
 
-    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'black', width:'100%' }}>
+  <View style={styles.container}>
       <Image 
-        source={isSpeaking?require('../assets/Speaking.gif'):require('../assets/IA_BG2.jpg')} 
-        style={{ width: '100%', height:'auto', aspectRatio:'2/3' }} 
+        source={isSpeaking ? require('../assets/Speaking.gif') : require('../assets/IA_BG2.jpg')} 
+        style={{ width: '100%', height: 'auto', aspectRatio: '2/3' }} 
         resizeMode="contain"
       />
-      <View style={{ justifyContent: 'center', alignItems: 'center', width: '100%', height: 150 }}>
-      {/* {((isListening.current && !isProcessing) || (isRecording.current))  && ( */}
+      <View style={styles.soundWavesContainer}>
         {(!isProcessing && !isSpeaking && transcriptionRef.current) && (
           <Image
             source={require('../assets/images/sound_waves.gif')} 
@@ -609,6 +631,57 @@ export default function App() {
           />
         )}
       </View>
+      <Modal
+        visible={showCarForm}
+        transparent={true}
+        animationType="slide"
+      >
+        <View style={styles.modalContainer}>
+          <TouchableOpacity
+            style={styles.closeButton}
+            onPress={() => setShowCarForm(false)}
+          >
+            <Text style={styles.closeButtonText}>X</Text>
+          </TouchableOpacity>
+          <CarForm onSubmit={handleFormSubmit} />
+        </View>
+      </Modal>
     </View>
-  );
+);
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'black',
+  },
+  soundWavesContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: '100%',
+    height: 150,
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)', // Fondo semi-transparente
+    padding: 20,
+  },
+  closeButton: {
+    position: 'absolute',
+    top: 25,
+    right: 25,
+    backgroundColor: 'black',
+    borderRadius: 50,
+    padding: 10,
+    zIndex: 1,
+  },
+  closeButtonText: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: 'white',
+  },
+});
