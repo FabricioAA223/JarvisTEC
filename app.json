@@ -1,17 +1,14 @@
 {
   "expo": {
-    "name": "jarvis-demo",
+    "name": "JarvisTEC",
     "slug": "jarvis-demo",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/images/mainlogo.png",
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
-    "permissions": [
-      "AUDIO_RECORDING"
-    ],
     "splash": {
-      "image": "./assets/images/splash.png",
+      "image": "./assets/images/mainlogo.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
@@ -20,10 +17,14 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "foregroundImage": "./assets/images/mainlogo.png",
         "backgroundColor": "#ffffff"
       },
-      "permissions": ["INTERNET"]
+      "permissions": [
+        "INTERNET",
+        "android.permission.RECORD_AUDIO"
+      ],
+      "package": "com.fabricioalv23.jarvisdemo"
     },
     "web": {
       "bundler": "metro",
@@ -36,6 +37,11 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "eas": {
+        "projectId": "41840874-d30d-4d93-858b-919474689782"
+      }
     }
   }
 }

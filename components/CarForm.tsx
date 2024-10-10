@@ -1,9 +1,9 @@
-import { FormData } from '@/constants/Types';
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { View, Text, TextInput, Button, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, Alert } from 'react-native';
+import { FormData } from '../constants/Types';
 
 interface CarFormProps {
-  onSubmit: (formData: FormData) => void;
+  onSubmit: (formData: any) => void;
 }
 
 export const modeloCoche = [
@@ -27,18 +27,18 @@ const CarForm: React.FC<CarFormProps> = ({ onSubmit }) => {
   const [formData, setFormData] = useState<FormData>({
     Make: '',
     Model: '',
-    Year: '',
+    Year: 0,
     Engine_Fuel_Type: '',
-    Engine_HP: '',
-    Engine_Cylinders: '',
+    Engine_HP: 0,
+    Engine_Cylinders: 0,
     Transmission_Type: '',
     Driven_Wheels: '',
-    Number_of_Doors: '',
+    Number_of_Doors: 0,
     Vehicle_Size: '',
     Vehicle_Style: '',
-    Highway_MPG: '',
-    City_MPG: '',
-    Popularity: ''
+    Highway_MPG: 0,
+    City_MPG: 0,
+    Popularity: 0  
   });
 
   const handleChange = (name: keyof FormData, value: string) => {
@@ -51,8 +51,13 @@ const CarForm: React.FC<CarFormProps> = ({ onSubmit }) => {
       Alert.alert('Error', 'Por favor, completa todos los campos.');
       return;
     }
-    onSubmit(formData);
+    const data = transformToListOfObjects(formData);
+    onSubmit(data);
   };
+
+  function transformToListOfObjects(data: any): Array<Record<any, any>> {
+    return Object.keys(data).map(key => ({ [key]: data[key] }));
+  }
 
   return (
     <KeyboardAvoidingView
@@ -68,7 +73,7 @@ const CarForm: React.FC<CarFormProps> = ({ onSubmit }) => {
             </Text>
             <TextInput
               style={styles.input}
-              value={formData[parametro as keyof FormData]}
+              value={formData[parametro as keyof FormData].toString()}
               onChangeText={(value) => handleChange(parametro as keyof FormData, value)}
               placeholder={`Ingrese ${pregunta}`}
               keyboardType={['Year', 'Engine_HP', 'Engine_Cylinders', 'Number_of_Doors', 'Highway_MPG', 'City_MPG', 'Popularity'].includes(parametro) ? 'numeric' : 'default'}

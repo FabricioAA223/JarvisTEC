@@ -40,22 +40,22 @@ const stringNumbers = [
   {string:'diciembre', number:12},
 
   //Adicional 
-  {string:'no', number:0},
   {string:'mujer', number:0},
   {string:'rural', number:0},
   {string:'femenino', number:0},
-  {string:'no amueblado', number:0},
+  {string:'no amueblada', number:0},
 
-  {string:'semi amueblado', number:2},
+  {string:'semi amueblada', number:2},
 
-  {string:'si', number:1},
-  {string:'sí', number:1},
+
   {string:'hombre', number:1},
   {string:'urbana', number:1},
   {string:'masculino', number:1},
-  {string:'amueblado', number:1},
+  {string:'amueblada', number:1},
 
-
+  {string:'no', number:0},
+  {string:'si', number:1},
+  {string:'sí', number:1},
 ]
 
 const isStringANumber = (str) => {
@@ -106,13 +106,13 @@ const modeloPrecioCasa = [
   {pregunta:"¿Cuántos dormitorios tiene la casa?", parametro:"bedrooms"},
   {pregunta:"¿Cuántos baños tiene la casa?", parametro:"bathrooms"},
   {pregunta:"¿Cuántos pisos tiene la casa?", parametro:"stories"},
-  {pregunta:"¿La casa tiene acceso directo a la carretera principal? (yes para Sí, no para No)", parametro:"mainroad"},
-  {pregunta:"¿La casa cuenta con cuarto de huéspedes? (yes para Sí, no para No)", parametro:"guestroom"},
-  {pregunta:"¿La casa tiene sótano? (yes para Sí, no para No)", parametro:"basement"},
-  {pregunta:"¿La casa tiene calefacción de agua caliente? (yes para Sí, no para No)", parametro:"hotwaterheating"},
-  {pregunta:"¿La casa cuenta con aire acondicionado? (yes para Sí, no para No)", parametro:"airconditioning"},
+  {pregunta:"¿La casa tiene acceso directo a la carretera principal?", parametro:"mainroad"},
+  {pregunta:"¿La casa cuenta con cuarto de huéspedes?", parametro:"guestroom"},
+  {pregunta:"¿La casa tiene sótano?", parametro:"basement"},
+  {pregunta:"¿La casa tiene calefacción de agua caliente?", parametro:"hotwaterheating"},
+  {pregunta:"¿La casa cuenta con aire acondicionado?", parametro:"airconditioning"},
   {pregunta:"¿Cuántos espacios de estacionamiento tiene la casa?", parametro:"parking"},
-  {pregunta:"¿La casa está en una zona preferencial? (yes para Sí, no para No)", parametro:"prefarea"},
+  {pregunta:"¿La casa está en una zona preferencial?", parametro:"prefarea"},
   {pregunta:"¿La casa está amueblada o semi-amueblada?", parametro:"furnishingstatus"}
 ];
 
@@ -197,14 +197,14 @@ const CATEGORIAS = [
     useForm: true
   }, 
   {
-    keywords: ['predecir grasa corporal'], 
+    keywords: ['predecir grasa corporal', 'grasa corporal'], 
     nombre:"grasa corporal", 
     preguntas: modeloMasaCorporal,
     endPoint: 'predict_bodyfat ',
     useForm: false
   },
   {
-    keywords: ['predecir ataque cardiaco', 'predecir ataque corazón', 'paro cardiaco', 'ataque cardiaco', 'ataque corazón'], 
+    keywords: ['predecir ataque cardíaco', 'predecir ataque corazón', 'paro cardíaco', 'ataque cardíaco', 'ataque corazón'], 
     nombre:"Ataque cardiaco", 
     preguntas: modeloAtaqueCardiaco,
     endPoint: 'predict_stroke ',
@@ -218,14 +218,14 @@ const CATEGORIAS = [
     useForm: false
   },
   {
-    keywords: ['predecir la cirrosis'], 
+    keywords: ['predecir la cirrosis', 'cirrosis'], 
     nombre:"Cirrosis", 
     preguntas: modeloCirrosis,
     endPoint: 'predict_cirrosis',
     useForm: false
   },
   {
-    keywords: ['predecir cambio de proveedor'], 
+    keywords: ['predecir cambio de proveedor', 'proveedor'], 
     nombre:"Proveedor telefonico", 
     preguntas: modeloCambioProveedorTelefonia,
     endPoint: 'predict_telephony',
@@ -239,7 +239,7 @@ const CATEGORIAS = [
     useForm: false
   },
   {
-    keywords: ['predecir la hepatitis'], 
+    keywords: ['predecir la hepatitis', 'hepatitis'], 
     nombre:"Hepatitis", 
     preguntas: modeloPrediccionHepatitis,
     endPoint: 'predict_hepatitis',
@@ -272,7 +272,7 @@ export default function App() {
   const isRecording = useRef(false); // Usar useRef para controlar el estado de grabación
   const categoryRef = useRef(null) //inicia en null
   const firstCall = useRef(true)
-  const [showCarForm, setShowCarForm] = useState(true);
+  const [showCarForm, setShowCarForm] = useState(false);
 
   const handleFormSubmit = (data) => {
     console.log('Datos del formulario:', data);
@@ -386,7 +386,7 @@ export default function App() {
     });
 
     try {
-      const response = await fetch('http://172.24.65.76:8000/convert-and-transcribe/', {
+      const response = await fetch('https://swine-upright-possibly.ngrok-free.app/convert-and-transcribe/', {
         method: 'POST',
         body: formData,
         headers: {
@@ -526,7 +526,7 @@ export default function App() {
       return;
     }
     if (categoria.useForm) {
-      setL
+      // setL
       setShowCarForm(true);
       return;
     }
@@ -538,7 +538,7 @@ export default function App() {
       await speakAndWait(pregunta.pregunta)
       // Iniciar la grabación y esperar la transcripción
       
-      let transcription = await getTranscriptionFromRecording(4000);
+      let transcription = await getTranscriptionFromRecording(4500);
       // Validar si la transcripción es un número
       while (giveANumber) {
         const extractedNumber = extractNumber(transcription); // Intentar extraer número
@@ -557,7 +557,7 @@ export default function App() {
           else {
             // Si no es un número, pedir al usuario que repita
             await speakAndWait("Número no reconocido, por favor repítalo");
-            const newTranscription = await getTranscriptionFromRecording(3500); // Obtener nueva transcripción
+            const newTranscription = await getTranscriptionFromRecording(4500); // Obtener nueva transcripción
             transcription = newTranscription;
           }
         }
