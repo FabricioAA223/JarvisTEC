@@ -12,6 +12,7 @@ import { CameraView, CameraType, useCameraPermissions } from "expo-camera";
 import * as FileSystem from "expo-file-system";
 import { StackNavigationProp } from '@react-navigation/stack';
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { manipulateAsync, SaveFormat } from 'expo-image-manipulator';
 
 type RootStackParamList = {
   'Registro Facial': undefined; 
@@ -30,22 +31,22 @@ const FacialLogin: React.FC<FacialLoginProps> = ({ navigation }) => {
   const [isLogged, setIsLogged] = useState<boolean>(false);
   const [name, setName] = useState<string>("");
 
-  useEffect(() => {
-    const checkLoginStatus = async () => {
-      try {
-        const loggedIn = await AsyncStorage.getItem("isLogged");
-        const storedName = await AsyncStorage.getItem("name");
-        if (loggedIn === "true" && storedName) {
-          setIsLogged(true);
-          setName(storedName);
-          navigation.navigate("HomePage", { name: storedName });
-        }
-      } catch (error) {
-        console.error("Error checking login status", error);
-      }
-    };
-    checkLoginStatus();
-  }, []);
+  // useEffect(() => {
+  //   const checkLoginStatus = async () => {
+  //     try {
+  //       const loggedIn = await AsyncStorage.getItem("isLogged");
+  //       const storedName = await AsyncStorage.getItem("name");
+  //       if (loggedIn === "true" && storedName) {
+  //         setIsLogged(true);
+  //         setName(storedName);
+  //         navigation.navigate("HomePage", { name: storedName });
+  //       }
+  //     } catch (error) {
+  //       console.error("Error checking login status", error);
+  //     }
+  //   };
+  //   checkLoginStatus();
+  // }, []);
 
   if (!permission) {return <View />; }
 
@@ -64,6 +65,28 @@ const FacialLogin: React.FC<FacialLoginProps> = ({ navigation }) => {
     );
   }
 
+  /**
+   * Redimensiona una imagen y devuelve el URI de la imagen manipulada.
+   * 
+   * @param uri - URI de la imagen original.
+   * @param width - Ancho al que se quiere redimensionar la imagen.
+   * @param compress - Nivel de compresión de la imagen (0 a 1).
+   * @returns Promesa que resuelve con el nuevo URI de la imagen redimensionada.
+   */
+  const resizeImage = async (uri: string, width: number = 800, compress: number = 0.7): Promise<string> => {
+    try {
+      const result = await manipulateAsync(
+        uri,
+        [{ resize: { width } }], // Redimensiona la imagen al ancho especificado
+        { compress, format: SaveFormat.JPEG } // Comprime y convierte la imagen a JPEG
+      );
+      return result.uri; // Retorna el URI de la imagen redimensionada
+    } catch (error) {
+      console.error("Error al redimensionar la imagen:", error);
+      throw error;
+    }
+  };
+
   const handleTakePhoto = async () => {
     if (cameraRef.current) {
       try {
@@ -80,24 +103,28 @@ const FacialLogin: React.FC<FacialLoginProps> = ({ navigation }) => {
   };
 
   const handleLogin = async (imageUri: string) => {
+    console.log("Iniciando el loggin")
     setLoading(true);
     if(isLogged==true){
       navigation.navigate("HomePage", { name: name });
       return;
     }
     try {
+      console.log("Iniciando el try")
+      const resizedUri = await resizeImage(imageUri, 800, 0.7); // Redimensiona la imagen
+
       const fileInfo = await FileSystem.getInfoAsync(imageUri); // FileSystem to conver URI --> FILE
       if (!fileInfo.exists) { throw new Error("El archivo no existe en la ruta especificada.");}
-
+      console.log("File exist")
       const formData = new FormData();
       // Create a blop using FileSystem.readAsStringAsync with base64
       const file = {
-        uri: imageUri,
+        uri: resizedUri,
         type: "image/jpeg",
         name: "photo.jpg",
       };
       formData.append("image", file as any);
-
+      console.log("Form ready")
       const response = await fetch("https://face-recognition-aws-api.vercel.app/login", {
         method: "POST",
         body: formData,
@@ -106,11 +133,12 @@ const FacialLogin: React.FC<FacialLoginProps> = ({ navigation }) => {
         },
         cache: "no-cache",
       });
-
+      console.log("After fetch")
+      console.log("Respuesta: ", response)
       if (!response.ok) {
         throw new Error(`Server error: ${response.status}`);
       }
-
+      console.log("Respuesta: ", response)
       const result = await response.json();
       if (result.found) {
         // Store login status and navigate to HomePage
