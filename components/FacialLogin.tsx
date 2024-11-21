@@ -88,7 +88,7 @@ const FacialLogin: React.FC<FacialLoginProps> = ({ navigation }) => {
     try {
       const fileInfo = await FileSystem.getInfoAsync(imageUri); // FileSystem to conver URI --> FILE
       if (!fileInfo.exists) { throw new Error("El archivo no existe en la ruta especificada.");}
-
+      
       const formData = new FormData();
       // Create a blop using FileSystem.readAsStringAsync with base64
       const file = {
@@ -97,8 +97,7 @@ const FacialLogin: React.FC<FacialLoginProps> = ({ navigation }) => {
         name: "photo.jpg",
       };
       formData.append("image", file as any);
-
-      const response = await fetch("https://face-recognition-aws-api.vercel.app/login", {
+      const response = await fetch("http://192.168.1.188:8080/login", {
         method: "POST",
         body: formData,
         headers: {

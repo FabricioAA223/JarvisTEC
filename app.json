@@ -1,10 +1,10 @@
 {
   "expo": {
-    "name": "jarvis-demo",
+    "name": "JarvisTEC",
     "slug": "jarvis-demo",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/images/mainlogo.png",
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
     "permissions": [
@@ -23,7 +23,11 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "permissions": ["INTERNET"]
+      "permissions": [
+        "INTERNET",
+        "android.permission.RECORD_AUDIO"
+      ],
+      "package": "com.fabricioalv23.jarvisdemo"
     },
     "web": {
       "bundler": "metro",
