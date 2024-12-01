@@ -1,5 +1,6 @@
 import { RouteProp } from "@react-navigation/native";
 import React, { useEffect, useRef, useState } from 'react';
+import { useNavigation } from '@react-navigation/native';
 import { View, Text, Button, ActivityIndicator, Image, Alert, StyleSheet, Modal, TouchableOpacity } from 'react-native';
 import { Audio } from 'expo-av';
 import * as Speech from 'expo-speech';
@@ -270,9 +271,9 @@ const CATEGORIAS = [
 ];
 
 const HomePage = ({ route }) => { //: React.FC<HomePageProps>
+  const navigation = useNavigation();
   const { name } = route.params; // Accediendo a los parámetros
   const [isSpeaking, setIsSpeaking] = useState(false);
-
   const isListening = useRef(true); //inicia en true
   const transcriptionRef = useRef(null);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -399,7 +400,7 @@ const HomePage = ({ route }) => { //: React.FC<HomePageProps>
     });
 
     try {
-      const response = await fetch('http://192.168.1.188:8000/convert-and-transcribe/', {
+      const response = await fetch('http://192.168.1.188:8001/convert-and-transcribe/', {
         method: 'POST',
         body: formData,
         headers: {
@@ -465,7 +466,7 @@ const HomePage = ({ route }) => { //: React.FC<HomePageProps>
     console.log("Combined data: ",  combinedData)
 
     try {
-      const response = await fetch(`http://192.168.1.188:8000/${endPoint}`, {
+      const response = await fetch(`http://192.168.1.188:8001/${endPoint}`, {
         method: 'POST',
         body: JSON.stringify(combinedData),
         headers: {
@@ -621,16 +622,18 @@ const HomePage = ({ route }) => { //: React.FC<HomePageProps>
   };
 
   return (
-    // <View>
-    //   <Text>Bienvenido, {name}!</Text>
-    //   {/* Aquí puedes agregar más contenido */}
-    // </View>
     <View style={styles.container}>
       <Image 
         source={isSpeaking ? require('../assets/Speaking.gif') : require('../assets/IA_BG2.jpg')} 
         style={{ width: '100%', height: 'auto', aspectRatio: '2/3' }} 
         resizeMode="contain"
       />
+      <TouchableOpacity
+        style={styles.videoButton}
+        onPress={() => navigation.navigate('VideoUploader')}
+      >
+        <Text style={styles.videoButtonText}>Video</Text>
+      </TouchableOpacity>
       <View style={styles.soundWavesContainer}>
         {(!isProcessing && !isSpeaking && transcriptionRef.current) && (
           <Image
@@ -692,6 +695,24 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: 'bold',
     color: 'white',
+  },
+  videoButton: {
+    position: 'absolute',
+    top: 31,
+    right: 0,
+    backgroundColor: '#001f54',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+  },
+  videoButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 });
 

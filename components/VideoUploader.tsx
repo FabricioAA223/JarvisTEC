@@ -3,21 +3,27 @@ import {
   View,
   Button,
   Text,
-  ProgressBarAndroid,
   Alert,
   Platform,
-  Linking,
+  StyleSheet,
+  Image,
 } from "react-native";
+// import { Bar } from "react-native-progress";
 import * as DocumentPicker from "expo-document-picker";
 import * as MediaLibrary from "expo-media-library";
+import * as FileSystem from "expo-file-system";
+import { Video } from "expo-av";
 import axios from "axios";
 
 const VideoUploader = () => {
   const [videoUri, setVideoUri] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [downloadLink, setDownloadLink] = useState<string | null>(null);
-  const [uploadProgress, setUploadProgress] = useState<number>(0); // Estado para el progreso de carga
+  const [downloadedVideoUri, setDownloadedVideoUri] = useState<string | null>(
+    null
+  );
 
+  // Ask for Storage Permission
   useEffect(() => {
     const requestPermissions = async () => {
       const { status } = await MediaLibrary.requestPermissionsAsync();
@@ -32,7 +38,7 @@ const VideoUploader = () => {
     requestPermissions();
   }, []);
 
-  // Función para seleccionar un video
+  // Select a local video
   const pickVideo = async () => {
     try {
       const result = await DocumentPicker.getDocumentAsync({
@@ -42,7 +48,8 @@ const VideoUploader = () => {
       if (!result.canceled && result.assets && result.assets.length > 0) {
         const video = result.assets[0]; // Obtener el primer archivo
         setVideoUri(video.uri);
-        console.log(video.uri);
+        setDownloadLink(null);
+        setDownloadedVideoUri(null)
       } else {
         Alert.alert(
           "Error",
@@ -75,7 +82,6 @@ const VideoUploader = () => {
     console.log("FormData: ", formData); // Verifica si el FormData está bien estructurado
 
     setLoading(true);
-    setUploadProgress(0); // Reiniciar progreso
 
     try {
       const response = await axios.post(
@@ -84,12 +90,6 @@ const VideoUploader = () => {
         {
           headers: {
             "Content-Type": "multipart/form-data",
-          },
-          onUploadProgress: (progressEvent) => {
-            const percent = Math.round(
-              (progressEvent.loaded * 100) / progressEvent.total
-            );
-            setUploadProgress(percent);
           },
         }
       );
@@ -107,53 +107,103 @@ const VideoUploader = () => {
     }
   };
 
+  const downloadAndDisplayVideo = async () => {
+    if (!downloadLink) {
+      Alert.alert("Error", "No hay enlace de descarga disponible.");
+      return;
+    }
+
+    try {
+      const fileUri = `${FileSystem.documentDirectory}processed-video.mp4`;
+      const downloadResumable = FileSystem.createDownloadResumable(
+        downloadLink,
+        fileUri
+      );
+
+      const { uri } = await downloadResumable.downloadAsync();
+      setDownloadedVideoUri(uri);
+    } catch (error) {
+      Alert.alert("Error", "No se pudo descargar el video.");
+      console.error(error);
+    }
+  };
+
   return (
-    <View
-      style={{
-        flex: 1,
-        justifyContent: "center",
-        alignItems: "center",
-        padding: 20,
-      }}
-    >
-      <Button title="Seleccionar Video" onPress={pickVideo} />
-      {videoUri && <Text>Video seleccionado: {videoUri}</Text>}
+    <View style={styles.generalContainer}>
+    <Text style={styles.title}>Analizador de Videos</Text>
+      <View style={styles.container}>
 
-      <Button
-        title={loading ? "Subiendo..." : "Subir Video"}
-        onPress={uploadVideo}
-        disabled={loading}
-      />
+        <Button title="Seleccionar Video" onPress={pickVideo} />
+        {videoUri && <Text style={{color:"white", marginTop: 20, marginBottom:20}}>Video seleccionado: {videoUri}</Text>}
 
-      {/* Indicador de progreso */}
-      {loading && (
-        <View style={{ width: "100%", marginTop: 20 }}>
-          {Platform.OS === "android" ? (
-            <ProgressBarAndroid
-              styleAttr="Horizontal"
-              indeterminate={false}
-              progress={uploadProgress / 100}
-            />
-          ) : (
-            <Text>{uploadProgress}%</Text>
-          )}
-        </View>
-      )}
-
-      {/* Mostrar enlace de descarga */}
-      {downloadLink && (
-        <View style={{ marginTop: 20 }}>
-          <Text style={{ marginBottom: 10 }}>Video Procesado:</Text>
+        {videoUri && !downloadLink &&  (
           <Button
-            title="Descargar"
-            onPress={() => {
-              Linking.openURL(downloadLink);
-            }}
+            title={loading ? "Subiendo..." : "Procesar el video"}
+            onPress={uploadVideo}
+            disabled={loading}
           />
-        </View>
-      )}
+        )}
+
+        {loading && (
+          <View>
+            <Image
+              source={require("../assets/Loader.gif")}
+              style={{ width: 100, height: 100, marginTop:15, marginRight: "auto", marginLeft:"auto" }}
+              resizeMode="contain"
+            />
+          </View>
+        )}
+
+        {downloadLink && !downloadedVideoUri && (
+          <View style={{ marginTop: 20 }}>
+            <Text style={{ marginBottom: 10, color:"white" }}>Video Procesado:</Text>
+            <Button
+              title="Descargar y Mostrar"
+              onPress={downloadAndDisplayVideo}
+            />
+          </View>
+        )}
+
+        {downloadedVideoUri && (
+          <View style={{ marginTop: 20 }}>
+            <Text style={{color:"white", marginTop: 20, marginBottom:10}}>Video Descargado:</Text>
+            <Video
+              source={{ uri: downloadedVideoUri }}
+              style={styles.video}
+              useNativeControls
+              resizeMode="contain"
+            />
+          </View>
+        )}
+      </View>
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  generalContainer: {
+    backgroundColor: "#001f54",
+    padding: 20,
+    flex: 1,
+    alignItems: "center",
+  },
+  container:{
+    justifyContent: "center",
+  },
+  title: {
+    fontSize: 24,
+    height: 40,
+    margin: 30,
+    color: "white",
+    fontWeight: "bold",
+    justifyContent: "center",
+    marginBottom: 20,
+  },
+  video: {
+    width: 300,
+    height: 400,
+    backgroundColor: "#000",
+  },
+});
 
 export default VideoUploader;

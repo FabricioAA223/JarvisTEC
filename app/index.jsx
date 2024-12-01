@@ -14,7 +14,7 @@ export default function App() {
 
   return (
     <NavigationContainer independent={true}>
-      <Stack.Navigator initialRouteName="VideoUploader">
+      <Stack.Navigator initialRouteName="Registro Facial">
         <Stack.Screen name="Registro Facial" options={{ headerShown: false }}  component={FacialLogin} />
         <Stack.Screen name="HomePage" options={{ headerShown: false }}  component={HomePage} />
         <Stack.Screen name="VideoUploader" options={{ headerShown: false }}  component={VideoUploader} />

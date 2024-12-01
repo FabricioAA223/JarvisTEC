@@ -30,22 +30,22 @@ const FacialLogin: React.FC<FacialLoginProps> = ({ navigation }) => {
   const [isLogged, setIsLogged] = useState<boolean>(false);
   const [name, setName] = useState<string>("");
 
-  useEffect(() => {
-    const checkLoginStatus = async () => {
-      try {
-        const loggedIn = await AsyncStorage.getItem("isLogged");
-        const storedName = await AsyncStorage.getItem("name");
-        if (loggedIn === "true" && storedName) {
-          setIsLogged(true);
-          setName(storedName);
-          navigation.navigate("HomePage", { name: storedName });
-        }
-      } catch (error) {
-        console.error("Error checking login status", error);
-      }
-    };
-    checkLoginStatus();
-  }, []);
+  // useEffect(() => {
+  //   const checkLoginStatus = async () => {
+  //     try {
+  //       const loggedIn = await AsyncStorage.getItem("isLogged");
+  //       const storedName = await AsyncStorage.getItem("name");
+  //       if (loggedIn === "true" && storedName) {
+  //         setIsLogged(true);
+  //         setName(storedName);
+  //         navigation.navigate("HomePage", { name: storedName });
+  //       }
+  //     } catch (error) {
+  //       console.error("Error checking login status", error);
+  //     }
+  //   };
+  //   checkLoginStatus();
+  // }, []);
 
   if (!permission) {return <View />; }
 
